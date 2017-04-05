@@ -577,5 +577,45 @@ class WxPayApi
 		$time = $time2[0];
 		return $time;
 	}
+
+
+	
+    public function checkSing()
+    {
+        //获取通知的数据
+        $xml = $GLOBALS['HTTP_RAW_POST_DATA'];
+        $weixin = new WxPayDataBase();
+        $result = $weixin->FromXml($xml);
+        $sign = $result['sign'];
+        $correctResponse = ['return_code' => 'SUCCESS', 'return_msg' => 'OK'];
+        $errorResponse = ['return_code' => 'FAIL', 'return_msg' => 'OK'];
+        //对比签名数据
+        if ($sign === $weixin->MakeSign()) {
+            //返回正确的结果
+            return ['status' => 'SUCCESS', 'response' => $this->arrayToXml($correctResponse),'data' => $result];
+        } else {
+            return ['status' => 'FAIL', 'response' => $this->arrayToXml($errorResponse)];
+        }
+    }
+
+
+    /**
+     * 数组转换成xml
+     * @param $data
+     * @return string
+     */
+    public function arrayToXml($data)
+    {
+        $xml = "<xml>";
+        foreach ($data as $key => $val) {
+            if (is_numeric($val)) {
+                $xml .= "<" . $key . ">" . $val . "</" . $key . ">";
+            } else {
+                $xml .= "<" . $key . "><![CDATA[" . $val . "]]></" . $key . ">";
+            }
+        }
+        $xml .= "</xml>";
+        return $xml;
+    }
 }
 
